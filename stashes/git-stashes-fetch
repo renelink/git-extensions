@@ -1,0 +1,33 @@
+#!/bin/bash
+
+REMOTE=${1:-origin}
+
+
+STASH_CONTEXT=${STASH_CONTEXT:-$2}
+STASH_CONTEXT=${STASH_CONTEXT:-$(id -un)}
+
+
+git fetch $REMOTE refs/stashes/${STASH_CONTEXT}/*:refs/stashes/*
+
+if [ ! -f ".git/refs/stashes/logfile" ]; then
+	echo "No stashes exists."
+	exit
+fi
+
+tmp_logfile=$(mktemp)
+
+git cat-file -p $(cat .git/refs/stashes/logfile) > $tmp_logfile
+
+if [ -f ".git/logs/refs/stash" ]; then
+	tmp_stash_log=$(mktemp)
+	cat $tmp_logfile .git/logs/refs/stash > ${tmp_stash_log}
+	cp ${tmp_stash_log} .git/logs/refs/stash
+	rm ${tmp_stash_log}
+else
+	cp ${tmp_logfile} .git/logs/refs/stash
+fi
+
+rm $tmp_logfile
+
+cp .git/refs/stashes/stash .git/refs/stash
+

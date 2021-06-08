@@ -1,0 +1,22 @@
+#!/bin/bash
+
+REMOTE=${1:-origin}
+
+
+STASH_CONTEXT=${STASH_CONTEXT:-$2}
+STASH_CONTEXT=${STASH_CONTEXT:-$(id -un)}
+
+if [ ! -f ".git/logs/refs/stash" ]; then
+	echo No stashes found.
+	exit
+fi;
+
+cat .git/logs/refs/stash | awk '{print $2 ":refs/stashes/'"${STASH_CONTEXT}"'/log/" $2}' | xargs -n1 git push -f ${REMOTE} 
+
+
+STASH_REF_HASH=$(git hash-object -w .git/logs/refs/stash)
+echo Hashed .git/logs/refs/stash $STASH_REF_HASH
+git push -f $REMOTE $STASH_REF_HASH:refs/stashes/${STASH_CONTEXT}/logfile
+
+git push -f $REMOTE refs/stash:refs/stashes/${STASH_CONTEXT}/stash
+
