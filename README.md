@@ -17,3 +17,11 @@ After that I usually install all of my extensions by executing
     find "$(pwd)" -type f -name git-* | while read extension ; do ln -s $extension ~/bin/$(basename $extension); done
 
 in this repositories work tree.
+
+---
+**Note**
+
+Make sure that the files are executeable.
+
+    $ chmod +x ....
+---

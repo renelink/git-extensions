@@ -1,0 +1,36 @@
+#!/bin/bash
+
+trap 'git rebase --abort 2>&1 > /dev/null;exit 1' 2 
+
+GIT_REBASE_OUT=$(GIT_SEQUENCE_EDITOR="sed -i -re 's/^pick/e/'" git rebase -i $1 2>&1)
+
+if [ $? != 0 ]
+then
+	echo "Git workdir is not clean or you don't execute in a workdir at all."
+	exit 1
+fi
+
+
+MSG=$(echo "$GIT_REBASE_OUT" | grep 'Stopped at ') 
+while [[ "$(git status)" == *"interactive rebase in progress"* ]]
+do
+	echo -e "\033[1m$MSG\033[0m"
+	read -p "Continue [Y/n]? " -n 1 -r
+
+	if [ ! -z $REPLY ]
+	then
+		echo
+	fi
+
+	if [[ $REPLY =~ ^[Yy]$ ]] || [ -z "$REPLY" ]
+	then
+		if [ ! -z $REPLY ]
+		then
+			echo # print new line
+		fi
+
+		MSG=$(git rebase --continue 2>&1 | grep "Stopped at ")
+	else
+		git rebase --abort > /dev/null 2>&1
+	fi
+done
